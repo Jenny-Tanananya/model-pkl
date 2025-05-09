@@ -3,3 +3,5 @@ Image
 numpy
 pickle
 Path
+pillow
+scikit-learn
