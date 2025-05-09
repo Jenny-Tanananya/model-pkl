@@ -1,6 +1,8 @@
 import streamlit as st
 from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.models import Model
 import numpy as np
 from PIL import Image
 import pickle
@@ -16,30 +18,44 @@ if not os.path.exists(MODEL_PATH):
     st.error(f"ไม่พบไฟล์โมเดลที่: {MODEL_PATH}")
     st.stop()
 
-# โหลดโมเดลจากไฟล์ .pkl
+# โหลดข้อมูลจากไฟล์ .pkl
 try:
     with open(MODEL_PATH, 'rb') as f:
-        loaded_data = pickle.load(f)
+        model_weights = pickle.load(f)
     
-    # ตรวจสอบประเภทของข้อมูลที่โหลดมา
-    if isinstance(loaded_data, list):
-        st.warning("ไฟล์นี้เก็บข้อมูลเป็นลิสต์ กำลังพยายามประมวลผล...")
-        # ถ้าเป็นลิสต์อาจจะเป็นน้ำหนักของโมเดล (weights)
-        # ต้องมีโค้ดสร้างโครงสร้างโมเดลก่อน แล้วค่อยเซ็ตน้ำหนัก
-        st.error("ระบบต้องการโครงสร้างโมเดลเพิ่มเติมเพื่อใช้งานลิสต์นี้")
-        st.stop()
-    elif hasattr(loaded_data, 'predict'):
-        model = loaded_data
-        st.success("โหลดโมเดลสำเร็จ!")
-    else:
-        st.error("ไฟล์นี้ไม่ใช่โมเดล Keras ที่สามารถใช้งานได้")
+    if not isinstance(model_weights, list):
+        st.error("ไฟล์นี้ไม่เก็บน้ำหนักโมเดลในรูปแบบลิสต์")
         st.stop()
 
 except Exception as e:
     st.error(f"เกิดข้อผิดพลาดขณะโหลดโมเดล: {str(e)}")
     st.stop()
 
-# ชื่อคลาส (เหมือนเดิม)
+# สร้างโครงสร้างโมเดล (ต้องตรงกับตอนฝึก)
+def create_model():
+    # โครงสร้างพื้นฐาน MobileNetV2
+    base_model = MobileNetV2(weights=None, include_top=False, input_shape=(224, 224, 3))
+    
+    # เพิ่ม layer สำหรับ classification
+    x = GlobalAveragePooling2D()(base_model.output)
+    predictions = Dense(90, activation='softmax')(x)  # 90 classes
+    
+    model = Model(inputs=base_model.input, outputs=predictions)
+    return model
+
+# สร้างโมเดลและโหลดน้ำหนัก
+try:
+    model = create_model()
+    model.set_weights(model_weights)
+    st.success("โหลดโมเดลสำเร็จ!")
+except Exception as e:
+    st.error(f"เกิดข้อผิดพลาดขณะสร้างโมเดล: {str(e)}")
+    st.error("อาจเกิดจาก:")
+    st.error("- โครงสร้างโมเดลไม่ตรงกับน้ำหนักที่โหลดมา")
+    st.error("- เวอร์ชัน TensorFlow ไม่ตรงกัน")
+    st.stop()
+
+# ชื่อคลาส (90 คลาส)
 CLASS_NAMES = [
     'antelope', 'badger', 'bat', 'bear', 'bee', 'beetle', 'bison', 'boar', 
     'butterfly', 'cat', 'caterpillar', 'chimpanzee', 'cockroach', 'cow', 
