@@ -1,5 +1,6 @@
 import streamlit as st
 from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 import numpy as np
 from PIL import Image
 import pickle
@@ -27,7 +28,7 @@ if upload_file is not None:
     x = preprocess_input(x)
 
     # Display prediction
-    prediction = model.predict(x)  # Use x instead of img_array
+    prediction = model.predict(x)  
     predicted_class = CLASS_NAMES[np.argmax(prediction)]
 
     st.success(f"Predicted: {predicted_class}")
