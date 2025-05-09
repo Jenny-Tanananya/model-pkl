@@ -10,7 +10,9 @@ st.title("🐾 Animal Classifier")
 
 # โหลด model และ class names
 with open("my_checkpoint.pkl", "rb") as f:
-    model, CLASS_NAMES = pickle.load(f)
+    data = pickle.load(f)
+    print(type(data))
+    print(data)
 
 uploaded_file = st.file_uploader("Upload an animal image", type=["jpg", "jpeg", "png"])
 if uploaded_file is not None:
