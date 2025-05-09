@@ -10,6 +10,7 @@ import numpy as np
 import pickle
 from pathlib import Path
 
+st.set_page_config(page_title="Animal Classifier", page_icon="🐾")
 # --------------------------------------------------------------------
 # 1) Model path
 MODEL_PATH = 'my_checkpoint.pkl'
@@ -34,7 +35,6 @@ def preprocess_image(image: Image.Image) -> np.ndarray:
 
 # --------------------------------------------------------------------
 # 4) Streamlit UI
-st.set_page_config(page_title="Animal Classifier", page_icon="🐾")
 st.title("🐾 Animal Classifier Demo")
 st.write("Upload an image of an animal and click **Predict** to let the model identify the species.")
 
