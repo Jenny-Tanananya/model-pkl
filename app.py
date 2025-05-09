@@ -1,53 +1,29 @@
-
+# app.py
 import streamlit as st
-from PIL import Image
-import numpy as np
 import pickle
-from pathlib import Path
+import numpy as np
+from PIL import Image
 
 st.set_page_config(page_title="Animal Classifier", page_icon="🐾")
-# --------------------------------------------------------------------
-# 1) Model path
-MODEL_PATH = 'my_checkpoint.pkl'
-CLASS_NAMES = ['cat', 'dog', 'rabbit']  # หรือโหลดจากไฟล์แยกก็ได้
 
-# --------------------------------------------------------------------
-# 2) Load model (pickle)
-@st.cache_resource
-def get_model():
-    with open(MODEL_PATH, 'rb') as f:
-        model = pickle.load(f)
-    return model
+st.title("🐾 Animal Classifier")
 
-model = get_model()
+# โหลด model และ class names
+with open("my_checkpoint.pkl", "rb") as f:
+    model, CLASS_NAMES = pickle.load(f)
 
-# --------------------------------------------------------------------
-# 3) Image preprocessing (เปลี่ยนให้เหมาะกับโมเดลคุณ)
-def preprocess_image(image: Image.Image) -> np.ndarray:
-    image = image.convert('RGB').resize((224, 224))
-    arr = np.array(image) / 255.0
-    return arr.reshape(1, -1)  # ปรับตาม input shape ที่โมเดลรับ
+uploaded_file = st.file_uploader("Upload an animal image", type=["jpg", "jpeg", "png"])
+if uploaded_file is not None:
+    image = Image.open(uploaded_file).convert("RGB")
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
-# --------------------------------------------------------------------
-# 4) Streamlit UI
-st.title("🐾 Animal Classifier Demo")
-st.write("Upload an image of an animal and click **Predict** to let the model identify the species.")
+    # ทำ preprocessing ตามที่เทรนไว้
+    image = image.resize((224, 224))
+    img_array = np.array(image) / 255.0
+    img_array = img_array.reshape(1, 224, 224, 3)
 
-uploaded = st.file_uploader("Choose a .jpg / .jpeg / .png image", type=['jpg', 'jpeg', 'png'])
+    # พยากรณ์ผล
+    prediction = model.predict(img_array)
+    predicted_class = CLASS_NAMES[np.argmax(prediction)]
 
-if uploaded is not None:
-    img = Image.open(uploaded)
-    st.image(img, caption="Uploaded image", use_column_width=True)
-
-    if st.button("Predict"):
-        x = preprocess_image(img)
-        preds = model.predict_proba(x)[0]  # ต้องใช้ predict_proba สำหรับโมเดลที่รองรับ
-        top_k = preds.argsort()[-5:][::-1]
-
-        st.subheader("Prediction (Top‑5)")
-        for i in top_k:
-            st.write(f"- **{CLASS_NAMES[i]}** : {preds[i]*100:.2f}%")
-
-        with st.expander(f"Show probabilities for all {len(CLASS_NAMES)} species"):
-            for i, p in enumerate(preds):
-                st.write(f"{CLASS_NAMES[i]:>20} → {p*100:.2f}%")
+    st.success(f"Predicted: {predicted_class}")
