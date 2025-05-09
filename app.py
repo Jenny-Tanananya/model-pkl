@@ -12,7 +12,7 @@ st.set_page_config(page_title="Animal Classifier", page_icon="🐾")
 st.title("🐾 Animal Classifier")
 
 # โหลด model และ class names
-with open('model.pkl', 'rb') as f:
+with open('my_checkpoint.pkl', 'rb') as f:
     model = pickle.load(f)
 
 upload_file = st.file_uploader("Upload image:", type=["jpg", "jpeg", "png"])
