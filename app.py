@@ -1,14 +1,10 @@
-# app.py
 import streamlit as st
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, decode_predictions, preprocess_input
 from tensorflow.keras.preprocessing import image
 import numpy as np
 from PIL import Image
 import pickle
 
-
 st.set_page_config(page_title="Animal Classifier", page_icon="🐾")
-
 st.title("🐾 Animal Classifier")
 
 # โหลด model และ class names
@@ -20,18 +16,18 @@ CLASS_NAMES = [name for name, idx in sorted(CLASS_DICT.items(), key=lambda x: x[
 
 upload_file = st.file_uploader("Upload image:", type=["jpg", "jpeg", "png"])
 if upload_file is not None:
-    #display image on screen
+    # Display image on screen
     img = Image.open(upload_file)
-    st.image(img, caption="Upload Image")
+    st.image(img, caption="Uploaded Image")
 
-     #preprocessing
-    img = img.resize((224,224))
+    # Preprocessing
+    img = img.resize((224, 224))
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
     x = preprocess_input(x)
-    
-    #display prediction
-     prediction = model.predict(img_array)
+
+    # Display prediction
+    prediction = model.predict(x)  # Use x instead of img_array
     predicted_class = CLASS_NAMES[np.argmax(prediction)]
 
     st.success(f"Predicted: {predicted_class}")
