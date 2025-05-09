@@ -1,31 +1,37 @@
 # app.py
 import streamlit as st
-import pickle
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, decode_predictions, preprocess_input
+from tensorflow.keras.preprocessing import image
 import numpy as np
 from PIL import Image
+import pickle
+
 
 st.set_page_config(page_title="Animal Classifier", page_icon="🐾")
 
 st.title("🐾 Animal Classifier")
 
 # โหลด model และ class names
-with open("my_checkpoint.pkl", "rb") as f:
-    data = pickle.load(f)
-    print(type(data))
-    print(data)
+with open('model.pkl', 'rb') as f:
+    model = pickle.load(f)
 
-uploaded_file = st.file_uploader("Upload an animal image", type=["jpg", "jpeg", "png"])
-if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+upload_file = st.file_uploader("Upload image:", type=["jpg", "jpeg", "png"])
+if upload_file is not None:
+    #display image on screen
+    img = Image.open(upload_file)
+    st.image(img, caption="Upload Image")
 
-    # ทำ preprocessing ตามที่เทรนไว้
-    image = image.resize((224, 224))
-    img_array = np.array(image) / 255.0
-    img_array = img_array.reshape(1, 224, 224, 3)
-
-    # พยากรณ์ผล
-    prediction = model.predict(img_array)
-    predicted_class = CLASS_NAMES[np.argmax(prediction)]
-
-    st.success(f"Predicted: {predicted_class}")
+     #preprocessing
+    img = img.resize((224,224))
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
+    
+    #display prediction
+    preds = model.predict(x)
+    top_preds = decode_predictions(preds, top=3)[0]
+    
+    #display prediction
+    st.subheader("Prediction:")
+    for i, pred in enumerate(top_preds):
+        st.write(f"{i+1}. **{pred[1]}** - {round(pred[2]*100,2)}%")
