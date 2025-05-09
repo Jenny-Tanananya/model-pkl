@@ -1,6 +1,5 @@
 streamlit
 Image
 numpy
-tensorflow
+pickle
 Path
-h5py
